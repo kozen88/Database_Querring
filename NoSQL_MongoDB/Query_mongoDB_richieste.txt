@@ -1,0 +1,50 @@
+Per la creazione del databese e della collezione con i documenti ho utilizzato compass.
+
+
+Q_1.0: Trova tutti i contatti con società WebCorp
+ - db.contatti.find({Società: 'WebCorp'})
+
+Q_2.0: Trovare tutti i contatti con più di un numero telefonico
+ - db.contatti.find({Numero_di_cellulare: {$type: "array"}})
+
+Q_3: riporta solo i numeri dei contatti con tag Lavoro
+ - db.contatti.find({Tag:  {$in: ['lavoro']}}, {Numero_di_cellulare: true})
+
+Q_4: Riporta nome e cognome dei contatti che non hanno un profilo social
+ - db.contatti.find({"Altri_contatti.Profilo_social": {$exists: false}}, {Nome: true, Cognome: true})
+
+Q_5: Trova quanti contatti sono amici stretti e quanti no
+ - db.contatti.find({Amici_stretti: false}).count()
+ - db.contatti.find({Amici_stretti: true}).count()
+ oppure usando un unica query più complessa:
+ - db.contatti.aggregate([
+ 		 {
+   		 $group: {
+     			 _id: null,
+     			 num_amici_stretti: {$sum: {$cond: [{$eq: ["$Amici_stretti", true]}, 1, 0]}},
+    		         num_amici_non_stretti: {$sum: {$cond: [{$eq: ["$Amici_stretti", false]}, 1, 0]}}
+    			}
+  		}
+	])
+
+Q_6: Trova il numero medio di chiamate nell'ultimo mese con contatti che sono amici stretti
+ - db.contatti.aggregate([
+  		{
+   		    $match: {Amici_stretti: true}
+  		},
+  		{
+    		    $group: {
+      			_id: null,
+      			avg_chiamante_stretti: {$avg: "$Chiamate_ultimo_mese"}
+    			}
+  		}
+	     ])
+
+
+Q_7: Aggiungi a Simone Azzurri il numero di telefono: 345678902
+ - db.contatti.updateOne({Nome: 'Simone', Cognome: 'Azzurri'}, {$set: {Numero_di_cellulare: ["345678901", "345678902"]}})
+
+
+Q_8: Aggiungi un nuovo documento contenente il contatto Mary Salgado con numero di telefono 346679933
+     e indirizzo Via 25 Aprile 3, Firenze
+  - db.contatti.insertOne({Nome: 'Mary', Cognome: 'Salgado', Numero_di_cellulare: '346679933', Altri_contatti: {Indirizzo: ' Via 25 Aprile 3, Firenze'}})
